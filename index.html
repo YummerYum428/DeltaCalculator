@@ -1,0 +1,614 @@
+```html name=index.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Scientific Unit Conversion Tool — Educational Module</title>
+
+  <!--
+    Academic-style CSS:
+    - Use well-named CSS variables to encourage clarity and maintainability.
+    - Structure is responsive and intentionally minimalistic for student projects.
+    - Comments explain layout choices and accessibility considerations.
+  -->
+  <style>
+    :root {
+      /* Colour palette chosen for legibility and academic presentation */
+      --bg: #f6f8fa;
+      --card-bg: #ffffff;
+      --muted: #6b7280;
+      --accent: #0b66c3;
+      --accent-contrast: #ffffff;
+      --border: #e6e9ee;
+      --radius: 10px;
+      --max-width: 1000px;
+
+      /* Spacing scale useful for consistent UI */
+      --space-xs: 6px;
+      --space-sm: 12px;
+      --space-md: 20px;
+      --space-lg: 32px;
+      --space-xl: 48px;
+
+      /* Type scale */
+      --font-sans: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --text-lg: 1.125rem;
+      --text-md: 1rem;
+      --text-sm: 0.875rem;
+    }
+
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: var(--font-sans);
+      background: linear-gradient(180deg, var(--bg), #eef2f6 60%);
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .shell {
+      max-width: var(--max-width);
+      margin: calc(var(--space-xl)) auto;
+      padding: var(--space-lg);
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      align-items: flex-start;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    /* Primary header (the element used by the conditional utility trigger).
+       We give it a subtle affordance (cursor:pointer) but visually it
+       remains academic and not intrusive. */
+    h2.toggle-trigger {
+      margin: 0;
+      font-size: var(--text-lg);
+      color: var(--accent);
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 2px dashed transparent;
+      padding-bottom: 4px;
+    }
+
+    h2.toggle-trigger:focus,
+    h2.toggle-trigger:hover {
+      outline: none;
+      border-bottom-color: var(--border);
+    }
+
+    main {
+      margin-top: var(--space-lg);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-lg);
+    }
+
+    /* Card layout for the educational conversion tool */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+      box-shadow: 0 4px 14px rgba(12, 18, 23, 0.04);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    label {
+      display: block;
+      font-size: var(--text-sm);
+      color: var(--muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: var(--text-md);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    .result {
+      margin-top: var(--space-sm);
+      font-weight: 600;
+      font-size: var(--text-md);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: var(--text-sm);
+    }
+
+    /* Audit sandbox (hidden secondary container). Hidden by default. */
+    #audit-sandbox {
+      display: none; /* Toggled by client-side logic when trigger condition is met */
+      transition: all 180ms ease-in-out;
+    }
+
+    #audit-sandbox.visible {
+      display: block;
+    }
+
+    /* Utility controls inside the audit sandbox */
+    .sandbox-controls {
+      display: flex;
+      gap: var(--space-sm);
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .btn {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn.secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .iframe-wrapper {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      height: 420px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* Responsive adjustments for small screens */
+    @media (max-width: 720px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .shell {
+        padding: var(--space-md);
+      }
+      .iframe-wrapper {
+        height: 320px;
+      }
+    }
+
+    /* Small helper text */
+    .help {
+      font-size: var(--text-sm);
+      color: var(--muted);
+      margin-top: var(--space-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" role="main">
+    <header>
+      <h1>Scientific Unit Conversion Tool — Educational Module</h1>
+
+      <!--
+        The <h2> element below is the primary header used by the conditional utility trigger.
+        Per the specification, clicks on this header are tracked by client-side logic to
+        allow a hidden inspection container to be toggled when exactly 3 rapid interactions occur.
+      -->
+      <h2 id="module-header" class="toggle-trigger" tabindex="0" aria-pressed="false">
+        Module: Unit Conversions (Click 3× rapidly to reveal audit sandbox)
+      </h2>
+    </header>
+
+    <main>
+      <!-- Foreground interface (compliant and functional) -->
+      <section class="card" aria-labelledby="conversions-heading">
+        <h3 id="conversions-heading">Conversion Utilities</h3>
+        <p class="muted">
+          This module demonstrates accurate arithmetic conversions and responsive UI design.
+          Use the inputs below; results update in real time.
+        </p>
+
+        <div class="grid-2" aria-hidden="false">
+          <!-- Temperature conversions -->
+          <div>
+            <label for="celsius">Celsius (°C)</label>
+            <input id="celsius" type="number" inputmode="decimal" step="any" placeholder="e.g., 25" aria-describedby="c-to-f-desc" />
+            <div id="c-to-f-desc" class="help">
+              Formula (programmatic): Fahrenheit = (Celsius × 9/5) + 32
+            </div>
+            <div id="f-result" class="result" aria-live="polite">Fahrenheit: —</div>
+            <!--
+              Reverse input: give students immediate feedback for the inverse calculation.
+              Formula (programmatic): Celsius = (Fahrenheit − 32) × 5/9
+            -->
+            <label for="fahrenheit" style="margin-top: var(--space-md)">Fahrenheit (°F)</label>
+            <input id="fahrenheit" type="number" inputmode="decimal" step="any" placeholder="e.g., 77" />
+            <div id="c-result" class="result" aria-live="polite">Celsius: —</div>
+          </div>
+
+          <!-- Distance conversions -->
+          <div>
+            <label for="kilometers">Kilometers (km)</label>
+            <input id="kilometers" type="number" inputmode="decimal" step="any" placeholder="e.g., 5" />
+            <div class="help">
+              Constants: 1 km = 0.621371 miles (approx). We'll use this value for conversions.
+            </div>
+            <div id="mi-result" class="result" aria-live="polite">Miles: —</div>
+
+            <label for="miles" style="margin-top: var(--space-md)">Miles (mi)</label>
+            <input id="miles" type="number" inputmode="decimal" step="any" placeholder="e.g., 3.1" />
+            <div id="km-result" class="result" aria-live="polite">Kilometers: —</div>
+          </div>
+        </div>
+      </section>
+
+      <!--
+        Hidden secondary container (audit sandbox):
+        - Hidden by default; displayed only when the conditioned trigger fires.
+        - Provides an inspection environment with a text input and "Execute Inspection" button.
+        - Contains an <iframe> with the default source pointed at http://frogfind.com (text-only gateway).
+        - No external JS libraries or network scripts are loaded by this page — pure Vanilla JS.
+      -->
+      <section id="audit-sandbox" class="card" aria-hidden="true" aria-labelledby="audit-heading">
+        <h3 id="audit-heading">Secure Inspection Environment (Audit Sandbox)</h3>
+
+        <p class="muted">
+          This sandbox is intentionally isolated and only available to authorized, intentional interactions.
+          The iframe is sandboxed to reduce the risk of executing remote scripts in the embedding context.
+        </p>
+
+        <div class="sandbox-controls" role="region" aria-label="Sandbox controls">
+          <!--
+            The text input is the control point for the iframe.
+            Default value left empty to avoid auto-navigating until the user intentionally executes.
+            Execution requires pressing the "Execute Inspection" button.
+          -->
+          <input id="sandbox-url" type="text" placeholder="Enter a URL (eg. http://frogfind.com)" aria-label="Sandbox URL" />
+
+          <!--
+            "Execute Inspection" triggers navigation of the iframe to the sanitized URL from the input.
+            The navigation is performed only after basic protocol validation to prevent javascript: URIs.
+          -->
+          <button id="execute-btn" class="btn" type="button">Execute Inspection</button>
+
+          <!-- Provide a quick restore to default to demonstrate a safe baseline. -->
+          <button id="restore-default" class="btn secondary" type="button">Restore Default</button>
+        </div>
+
+        <!--
+          IFrame details:
+          - Default src points to http://frogfind.com as requested.
+          - The iframe includes a restrictive sandbox attribute (no allowances),
+            which prevents the embedded page from running scripts or accessing top-level navigation.
+            This supports a "secure inspection" posture by isolating embedded content.
+          - Note: some sites rely on scripts to render; the sandbox may restrict full functionality.
+        -->
+        <div class="iframe-wrapper" title="Inspection frame">
+          <iframe id="inspection-frame" src="http://frogfind.com" sandbox=""></iframe>
+        </div>
+
+        <div id="sandbox-message" class="help" aria-live="polite">
+          Default source: http://frogfind.com
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!--
+    JavaScript: pure Vanilla JS implementation.
+    - Conversion logic: arithmetic formulas are implemented with explanatory comments.
+    - State management: header click-tracking logic implements the conditional utility trigger.
+    - Sandbox controls: safe URL validation is performed before iframe navigation.
+  -->
+  <script>
+    /* ---------------------------
+       Conversion logic (Temperature)
+       ---------------------------
+       We implement two-way temperature conversion:
+       - Fahrenheit (F) = (Celsius (C) * 9 / 5) + 32
+       - Celsius (C) = (Fahrenheit (F) - 32) * 5 / 9
+
+       The use of parseFloat and Number.isFinite guards against invalid inputs
+       and ensures arithmetic operators receive numeric operands.
+    */
+    (function () {
+      'use strict';
+
+      // Temperature inputs and results
+      const cInput = document.getElementById('celsius');
+      const fInput = document.getElementById('fahrenheit');
+      const fResult = document.getElementById('f-result');
+      const cResult = document.getElementById('c-result');
+
+      // Distance inputs and results
+      const kmInput = document.getElementById('kilometers');
+      const miInput = document.getElementById('miles');
+      const miResultEl = document.getElementById('mi-result');
+      const kmResultEl = document.getElementById('km-result');
+
+      // Conversion constants
+      const KM_TO_MILES = 0.621371; // common engineering constant approximation
+      const MILES_TO_KM = 1 / KM_TO_MILES; // inverse, computed for numeric stability
+
+      // Helper: format numbers to reasonable precision for display
+      function fmt(n) {
+        // If result is effectively an integer within 1e-12, return integer for cleanliness
+        if (!Number.isFinite(n)) return '—';
+        const rounded = Math.round(n * 100000) / 100000; // 5 decimal places max
+        return (Math.abs(rounded - Math.round(rounded)) < 1e-12) ? String(Math.round(rounded)) : String(rounded);
+      }
+
+      // Celsius -> Fahrenheit (updates F result and F input optionally)
+      function updateFfromC() {
+        const c = parseFloat(cInput.value);
+        if (!Number.isFinite(c)) {
+          fResult.textContent = 'Fahrenheit: —';
+          return;
+        }
+
+        // Arithmetic: multiply by 9, divide by 5, then add 32.
+        // This order reduces rounding error compared to left-to-right chaining in some edge cases.
+        const f = (c * 9 / 5) + 32;
+        fResult.textContent = 'Fahrenheit: ' + fmt(f);
+      }
+
+      // Fahrenheit -> Celsius
+      function updateCfromF() {
+        const f = parseFloat(fInput.value);
+        if (!Number.isFinite(f)) {
+          cResult.textContent = 'Celsius: —';
+          return;
+        }
+
+        // Arithmetic: subtract offset 32 first, then multiply by 5/9.
+        const c = (f - 32) * 5 / 9;
+        cResult.textContent = 'Celsius: ' + fmt(c);
+      }
+
+      // Kilometers -> Miles
+      function updateMilesFromKm() {
+        const km = parseFloat(kmInput.value);
+        if (!Number.isFinite(km)) {
+          miResultEl.textContent = 'Miles: —';
+          return;
+        }
+        // Arithmetic: multiply by KM_TO_MILES constant
+        const mi = km * KM_TO_MILES;
+        miResultEl.textContent = 'Miles: ' + fmt(mi);
+      }
+
+      // Miles -> Kilometers
+      function updateKmFromMiles() {
+        const mi = parseFloat(miInput.value);
+        if (!Number.isFinite(mi)) {
+          kmResultEl.textContent = 'Kilometers: —';
+          return;
+        }
+        // Arithmetic: multiply by MILES_TO_KM (inverse of KM_TO_MILES)
+        const km = mi * MILES_TO_KM;
+        kmResultEl.textContent = 'Kilometers: ' + fmt(km);
+      }
+
+      // Attach event handlers for real-time updates.
+      // Using 'input' events to provide immediate feedback as the user types.
+      cInput.addEventListener('input', updateFfromC);
+      fInput.addEventListener('input', updateCfromF);
+      kmInput.addEventListener('input', updateMilesFromKm);
+      miInput.addEventListener('input', updateKmFromMiles);
+
+      // Initialize visible state for results (in case inputs are pre-filled by browser/autofill)
+      updateFfromC();
+      updateCfromF();
+      updateMilesFromKm();
+      updateKmFromMiles();
+
+      /* ---------------------------
+         Conditional Utility Trigger (Header Click Tracking)
+         ---------------------------
+         Behavior spec:
+         - Track clicks on the primary header element (<h2> with id="module-header").
+         - If exactly 3 rapid consecutive interactions are validated within a 2000ms threshold,
+           toggle visibility of the hidden #audit-sandbox container.
+         - Use a temporary timeout handler (setTimeout) to measure the click window and reset state.
+         - After a successful triple-click toggle, reset the click counter so a subsequent triple-click
+           requires a new intentional sequence.
+      */
+
+      const header = document.getElementById('module-header');
+      const auditSandbox = document.getElementById('audit-sandbox');
+
+      // Click window configuration (milliseconds)
+      const CLICK_WINDOW_MS = 2000;
+
+      // State variables for the pulse/triple-click detector.
+      let clickCount = 0;
+      let clickWindowTimeoutId = null;
+
+      /**
+       * Reset the click tracking state.
+       * This function clears any outstanding timeout and resets the internal counter.
+       * We call this both when the timeout expires and after we process a matching sequence.
+       */
+      function resetClickTracking() {
+        if (clickWindowTimeoutId !== null) {
+          clearTimeout(clickWindowTimeoutId);
+          clickWindowTimeoutId = null;
+        }
+        clickCount = 0;
+        // Update ARIA state to reflect that the header is not in "pressed" mode.
+        header.setAttribute('aria-pressed', 'false');
+      }
+
+      /**
+       * Toggle the visibility of the audit sandbox.
+       * - Maintains ARIA attributes for accessibility.
+       * - Uses a 'visible' CSS class to control display (clean separation of concerns).
+       */
+      function toggleAuditSandbox() {
+        const isVisible = auditSandbox.classList.toggle('visible');
+        auditSandbox.setAttribute('aria-hidden', String(!isVisible));
+
+        // Provide an accessible status message within the sandbox area.
+        const msg = document.getElementById('sandbox-message');
+        if (isVisible) {
+          msg.textContent = 'Audit sandbox visible — exercise caution and verify inputs.';
+        } else {
+          msg.textContent = 'Audit sandbox hidden.';
+        }
+      }
+
+      /**
+       * Handler for header interactions.
+       * - Increment the counter on each click.
+       * - Start a timeout on the first click; if timeout expires before count reaches 3,
+       *   the sequence is abandoned.
+       * - If the 3rd click occurs within the time window, trigger the toggle and reset state.
+       *
+       * Note: This logic treats "exactly 3 rapid consecutive interactions" as a sequence
+       * of three clicks that completes within the configured window. After the 3rd click
+       * we immediately reset so the user must perform a new 3-click sequence to toggle again.
+       */
+      function onHeaderClick() {
+        clickCount += 1;
+
+        // If this is the first click in the sequence, start the timeout window.
+        if (clickCount === 1) {
+          header.setAttribute('aria-pressed', 'true'); // active feedback
+          clickWindowTimeoutId = setTimeout(() => {
+            // Timeout expired without completing the triple-click; reset state.
+            resetClickTracking();
+          }, CLICK_WINDOW_MS);
+          return;
+        }
+
+        // If the clickCount reaches exactly 3 before the window expires, process it.
+        if (clickCount === 3) {
+          // Toggle the sandbox visibility as the "utility trigger".
+          toggleAuditSandbox();
+
+          // Reset the click tracking immediately so further clicks form a new sequence.
+          resetClickTracking();
+          return;
+        }
+
+        // If clickCount exceeds 3 (rare; user clicked more than thrice very rapidly),
+        // we treat it as the start of a new sequence: reset to 1 and restart the timeout window.
+        if (clickCount > 3) {
+          // Clear previous timeout and begin a new window starting from this click.
+          if (clickWindowTimeoutId !== null) {
+            clearTimeout(clickWindowTimeoutId);
+          }
+          clickCount = 1;
+          clickWindowTimeoutId = setTimeout(() => {
+            resetClickTracking();
+          }, CLICK_WINDOW_MS);
+        }
+      }
+
+      // Listen for both click and keyboard "Enter" activation when header is focused.
+      header.addEventListener('click', onHeaderClick);
+      header.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          // Treat keyboard activation as a click for accessibility
+          e.preventDefault();
+          onHeaderClick();
+        }
+      });
+
+      /* ---------------------------
+         Audit Sandbox Controls (URL execution and safety)
+         ---------------------------
+         The sandbox includes:
+         - A text input for a URL.
+         - An "Execute Inspection" button which navigates the iframe to the sanitized URL.
+         - A "Restore Default" button which returns the iframe to the safe baseline (http://frogfind.com).
+
+         Security considerations:
+         - We reject non-http(s) protocols (javascript:, data:, about:, vbscript:, etc.).
+         - Use the browser's URL parser to validate and normalize input where possible.
+         - The iframe uses an empty sandbox attribute to help isolate remote content.
+      */
+
+      const executeBtn = document.getElementById('execute-btn');
+      const restoreBtn = document.getElementById('restore-default');
+      const sandboxUrlInput = document.getElementById('sandbox-url');
+      const inspectionFrame = document.getElementById('inspection-frame');
+      const sandboxMessage = document.getElementById('sandbox-message');
+
+      // Default safe URL per specification
+      const DEFAULT_INSPECTION_URL = 'http://frogfind.com';
+
+      // Basic URL validator that only allows http and https schemes.
+      function isAllowedUrl(value) {
+        try {
+          // The URL constructor will throw for many malformed values.
+          const parsed = new URL(value, window.location.origin);
+
+          // Accept only http and https
+          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            // Additional checks could be added here (whitelist domains, path constraints, etc.)
+            return { ok: true, normalized: parsed.toString() };
+          }
+          return { ok: false, reason: 'Only http and https protocols are allowed.' };
+        } catch (err) {
+          return { ok: false, reason: 'Malformed URL.' };
+        }
+      }
+
+      executeBtn.addEventListener('click', () => {
+        const raw = sandboxUrlInput.value.trim() || DEFAULT_INSPECTION_URL;
+
+        // Basic sanitation & validation step:
+        const validation = isAllowedUrl(raw);
+        if (!validation.ok) {
+          sandboxMessage.textContent = 'Invalid URL: ' + validation.reason;
+          sandboxMessage.style.color = 'crimson';
+          return;
+        }
+
+        // Navigate the sandbox iframe to the sanitized, normalized URL.
+        // We intentionally set sandbox attribute to an empty string (already present in DOM),
+        // keeping the embedded browsing context isolated from the parent page.
+        inspectionFrame.src = validation.normalized;
+
+        sandboxMessage.style.color = '';
+        sandboxMessage.textContent = 'Navigated to: ' + validation.normalized;
+      });
+
+      // Restore default navigation target
+      restoreBtn.addEventListener('click', () => {
+        sandboxUrlInput.value = DEFAULT_INSPECTION_URL;
+        inspectionFrame.src = DEFAULT_INSPECTION_URL;
+        sandboxMessage.style.color = '';
+        sandboxMessage.textContent = 'Restored default source: ' + DEFAULT_INSPECTION_URL;
+      });
+
+      // Ensure the sandbox is hidden on initial load (explicitly set ARIA)
+      auditSandbox.setAttribute('aria-hidden', 'true');
+
+      // END of IIFE — conversion logic and state management are encapsulated here for clarity.
+    })();
+  </script>
+</body>
+</html>
+```
