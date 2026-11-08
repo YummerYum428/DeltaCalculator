@@ -303,14 +303,13 @@
             This supports a "secure inspection" posture by isolating embedded content.
           - Note: some sites rely on scripts to render; the sandbox may restrict full functionality.
         -->
-        <div class="iframe-wrapper" title="Inspection frame" style="text-align: center; padding: 20px;">
-    <a href="https://tinyurl.com/TcmDomain" target="_blank" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: sans-serif;">
-        Abrir Browser.lol (Link Seguro)
-    </a>
+        <div class="iframe-wrapper" title="Inspection frame">
+    <!-- Navegador Virtual integrado desbloqueado para redes escolares -->
+    <iframe id="inspection-frame" src="https://demo.rammerhead.org" sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"></iframe>
 </div>
 
 <div id="sandbox-message" class="help" aria-live="polite">
-    Default source: https://browser.lol
+    Default source: Secure Study Environment
 </div>
 
   <!--
